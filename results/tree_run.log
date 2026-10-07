@@ -1,0 +1,51 @@
+====================================================================================================
+ STAGE: tree   sender=Qwen/Qwen2.5-0.5B-Instruct  receiver=HuggingFaceTB/SmolLM2-1.7B-Instruct
+====================================================================================================
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights: 100%|██████████| 290/290 [00:00<00:00, 10523.14it/s]
+Loading weights: 100%|██████████| 218/218 [00:00<00:00, 7792.98it/s]
+watcher=Qwen/Qwen2.5-0.5B-Instruct  specialists/commander=HuggingFaceTB/SmolLM2-1.7B-Instruct  K=16  lambda=1.0
+144 train / 96 test (held-out templates). Running the TEXT tree to produce targets ...
+[transformers] The following generation flags are not valid and may be ignored: ['temperature']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+  0/240  commander: 'Impact: High disk usage and full disk space issue in the CDN Edge.\nAct'
+  40/240  commander: 'Impact: The addition of an autoscaler to one replica of the CDN-Edge s'
+  80/240  commander: 'Impact: The `orders-db` has experienced a failed heartbeat check at 08'
+  120/240  commander: 'Impact: The slow query logging exceeding one second duration is a crit'
+  160/240  commander: 'Impact: Slow queries in the Orders DB are causing database query proce'
+  200/240  commander: 'Impact: The drop in cache hit rate in the CDN edge services is critica'
+
+stage 1: branch bridges (mixed objective, lambda=1.0) ...
+  diagnosis   bridge trained  loss 2.972 (41s)
+  runbook     bridge trained  loss 1.885 (40s)
+  escalation  bridge trained  loss 2.246 (40s)
+stage 2: fan-in (out-bridges + merge) on commander objective ...
+  step 0 loss 7.630 (0s)
+  step 100 loss 6.107 (26s)
+  step 200 loss 5.076 (52s)
+  step 300 loss 5.477 (78s)
+
+=== RESULTS ===
+  TEXT tree             : severity 0.385/ECE 0.219  action 0.292/ECE 0.411  known 1.000/ECE 0.262  | runbook tok-acc 0.993 CE 0.20 fmt 1.00
+  LATENT tree           : severity 0.344/ECE 0.177  action 0.385/ECE 0.341  known 1.000/ECE 0.166  | runbook tok-acc 0.582 CE 2.00 fmt 1.00
+  leave-one-branch-out (latent tree):
+    drop diagnosis      : severity 0.292/ECE 0.125  action 0.385/ECE 0.337  known 1.000/ECE 0.165  | runbook tok-acc 0.582 CE 2.00 fmt 1.00
+    drop runbook        : severity 0.385/ECE 0.219  action 0.385/ECE 0.358  known 1.000/ECE 0.221  | runbook tok-acc 0.525 CE 2.46 fmt 0.00
+    drop escalation     : severity 0.333/ECE 0.167  action 0.385/ECE 0.339  known 1.000/ECE 0.167  | runbook tok-acc 0.581 CE 2.00 fmt 1.00
+  latency to Commander decision: text tree 3421 ms | latent tree 121.7 ms | 28x
+  voice-turn budget 400 ms (n=20): text tree in-budget 0.00 (median 3545 ms) | latent tree in-budget 1.00 (median 123 ms, p90 126 ms)
+  survives under budget: severity -0.042 vs text  action +0.094 vs text  known +0.000 vs text  | runbook format 1.00
+  drop diagnosis  : d(action acc) +0.000  d(severity acc) -0.052  d(runbook CE) +0.00
+  drop runbook    : d(action acc) +0.000  d(severity acc) +0.042  d(runbook CE) +0.46
+  drop escalation : d(action acc) +0.000  d(severity acc) -0.010  d(runbook CE) +0.00
+saved out/tree_results.json
+
+####################################################################################################
+ SUMMARY
+####################################################################################################
+tree: text 3421 ms vs latent 122 ms (28x); runbook format kept: text 1.00 latent 1.00
+  drop diagnosis  : d(severity acc) -0.052  d(runbook CE) +0.00
+  drop runbook    : d(severity acc) +0.042  d(runbook CE) +0.46
+  drop escalation : d(severity acc) -0.010  d(runbook CE) +0.00
+  voice turn @400 ms: text tree fits 0% (median 3545 ms) | latent tree fits 100% (median 123 ms); accuracy vs text severity -0.04 action +0.09 known +0.00; format 1.00
+
+total 25.0 min. Files: out/report.html (scorecard), out/*.json. Label: one seed, synthetic tasks, frozen models.

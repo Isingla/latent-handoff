@@ -1,0 +1,138 @@
+====================================================================================================
+ STAGE: latentcheck   sender=Qwen/Qwen2.5-0.5B-Instruct  receiver=HuggingFaceTB/SmolLM2-1.7B-Instruct
+====================================================================================================
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights: 100%|██████████| 290/290 [00:00<00:00, 9640.17it/s]
+Loading weights: 100%|██████████| 218/218 [00:00<00:00, 6670.74it/s]
+latentcheck  sender=Qwen/Qwen2.5-0.5B-Instruct (d=896)  receiver=HuggingFaceTB/SmolLM2-1.7B-Instruct (d=2048)
+[data] 48 plans + text-path outputs ...
+[transformers] The following generation flags are not valid and may be ignored: ['temperature']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+[fidelity]    0.820  (41s)
+[decay]       hop8/hop1 = 0.992   curve [0.82, 0.813, 0.788, 0.804, 0.793, 0.788, 0.797, 0.813]  (445s)
+[format_keep] latent 0.00 / text 1.00 = 0.00   | [cue_indep] text+cue 1.00 (delta +0.00), latent+cue 0.00  (36s)
+[fix]         lambda=1.0: format 1.00 (1.00 of text)  fidelity 0.787 (cost +0.033)  (93s)
+[latency]     handoff 20.5 ms | hop 17.1 ms | text 1644 ms | 96x per hop
+
+verdict: ATTENTION   -> out/report.json / out/report.html
+
+====================================================================================================
+ STAGE: tree   sender=Qwen/Qwen2.5-0.5B-Instruct  receiver=HuggingFaceTB/SmolLM2-1.7B-Instruct
+====================================================================================================
+watcher=Qwen/Qwen2.5-0.5B-Instruct  specialists/commander=HuggingFaceTB/SmolLM2-1.7B-Instruct  K=16  lambda=1.0
+144 train / 96 test (held-out templates). Running the TEXT tree to produce targets ...
+  0/240  commander: 'Impact: High disk usage and full disk space issue in the CDN Edge.\nAct'
+  40/240  commander: 'Impact: The addition of an autoscaler to one replica of the CDN-Edge s'
+  80/240  commander: 'Impact: The `orders-db` has experienced a failed heartbeat check at 08'
+  120/240  commander: 'Impact: The slow query logging exceeding one second duration is a crit'
+  160/240  commander: 'Impact: Slow queries in the Orders DB are causing database query proce'
+  200/240  commander: 'Impact: The drop in cache hit rate in the CDN edge services is critica'
+
+stage 1: branch bridges (mixed objective, lambda=1.0) ...
+  diagnosis   bridge trained  loss 3.292 (40s)
+  runbook     bridge trained  loss 2.845 (40s)
+  escalation  bridge trained  loss 2.524 (40s)
+stage 2: fan-in (out-bridges + merge) on commander objective ...
+  step 0 loss 5.089 (0s)
+  step 100 loss 6.395 (26s)
+  step 200 loss 6.134 (51s)
+  step 300 loss 4.702 (76s)
+
+=== RESULTS ===
+  TEXT tree             : severity 0.385/ECE 0.219  action 0.292/ECE 0.411  known 1.000/ECE 0.262  | runbook tok-acc 0.993 CE 0.20 fmt 1.00
+  LATENT tree           : severity 0.385/ECE 0.219  action 0.385/ECE 0.470  known 1.000/ECE 0.181  | runbook tok-acc 0.585 CE 1.95 fmt 1.00
+  leave-one-branch-out (latent tree):
+    drop diagnosis      : severity 0.177/ECE 0.008  action 0.438/ECE 0.127  known 0.000/ECE 0.830  | runbook tok-acc 0.367 CE 3.77 fmt 0.00
+    drop runbook        : severity 0.385/ECE 0.219  action 0.385/ECE 0.471  known 1.000/ECE 0.180  | runbook tok-acc 0.585 CE 1.95 fmt 1.00
+    drop escalation     : severity 0.385/ECE 0.219  action 0.385/ECE 0.471  known 1.000/ECE 0.181  | runbook tok-acc 0.583 CE 1.95 fmt 1.00
+  latency to Commander decision: text tree 3327 ms | latent tree 120.6 ms | 28x
+Traceback (most recent call last):
+  File "/workspace/latent_handoff_experiments.py", line 1023, in main
+    r = {"latentcheck": run_latentcheck, "tree": run_tree, "auction": run_auction}[s](ns)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/latent_handoff_experiments.py", line 757, in run_tree
+    B = args.voice_budget_ms; nv = min(20, len(test)); v = {"budget_ms": B, "n": nv}
+        ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Namespace' object has no attribute 'voice_budget_ms'
+
+====================================================================================================
+ STAGE: auction   sender=Qwen/Qwen2.5-0.5B-Instruct  receiver=HuggingFaceTB/SmolLM2-1.7B-Instruct
+====================================================================================================
+specialists=Qwen/Qwen2.5-0.5B-Instruct (d=896)  commander=HuggingFaceTB/SmolLM2-1.7B-Instruct (d=2048)  K=16  deadline=100.0ms control=3000.0ms
+720 train / 480 test auctions; mean value 12.4
+specialists writing memos (text lane; each timed) ...
+  0/1200  e.g. 'The likelihood of clicking on this historical post is low due to its negative CT'
+  80/1200  e.g. 'The likelihood of clicking on this historical post is low due to its negative Cl'
+  160/1200  e.g. 'The likelihood of clicking on this historical post is low due to its negative CT'
+  240/1200  e.g. 'The likelihood of clicking on this historical post is relatively low due to its '
+  320/1200  e.g. 'The likelihood of clicking on this historical post is low due to its negative CT'
+  400/1200  e.g. 'The likelihood of clicking on this historical post is low due to its high Click-'
+  480/1200  e.g. 'The likelihood of clicking on this historical post is low due to its negative CT'
+  560/1200  e.g. 'The likelihood of clicking on this historical post is low due to its high CTR bu'
+  640/1200  e.g. 'The likelihood of clicking on this historical post is low due to its negative CT'
+  720/1200  e.g. 'The likelihood of clicking on this historical post is moderate to high due to it'
+  800/1200  e.g. 'The likelihood of clicking on this historical post is low due to its high CTR bu'
+  880/1200  e.g. "The likelihood of clicking on this user's content is low due to their poor perfo"
+  960/1200  e.g. 'The likelihood of clicking on this historical post is low due to its negative CT'
+  1040/1200  e.g. 'The likelihood of clicking on this historical post is low due to its high CTR bu'
+  1120/1200  e.g. 'The likelihood of clicking on this historical post is low due to its negative CT'
+caching specialist hidden states (latent lane) ...
+training text soft prompt ...
+  [text] step 0 loss 0.965 (0s)
+  [text] step 100 loss 0.170 (7s)
+  [text] step 200 loss 1.488 (14s)
+  [text] step 300 loss 0.888 (20s)
+  [text] step 400 loss 2.238 (28s)
+  [text] step 500 loss 0.162 (35s)
+  [text] step 600 loss 4.511 (42s)
+  [text] step 700 loss 2.768 (49s)
+  [text] step 800 loss 3.176 (56s)
+  [text] step 900 loss 1.244 (63s)
+  [text] step 1000 loss 1.064 (70s)
+  [text] step 1100 loss 6.061 (76s)
+  [text] step 1200 loss 7.842 (83s)
+  [text] step 1300 loss 0.171 (90s)
+  [text] step 1400 loss 0.773 (97s)
+training latent bridges + merge ...
+  [latent] step 0 loss 4.365 (0s)
+  [latent] step 100 loss 4.611 (7s)
+  [latent] step 200 loss 0.517 (15s)
+  [latent] step 300 loss 4.542 (22s)
+  [latent] step 400 loss 0.927 (29s)
+  [latent] step 500 loss 0.946 (37s)
+  [latent] step 600 loss 0.522 (44s)
+  [latent] step 700 loss 1.049 (51s)
+  [latent] step 800 loss 1.195 (59s)
+  [latent] step 900 loss 0.661 (66s)
+  [latent] step 1000 loss 0.085 (73s)
+  [latent] step 1100 loss 0.343 (81s)
+  [latent] step 1200 loss 1.380 (88s)
+  [latent] step 1300 loss 0.974 (95s)
+  [latent] step 1400 loss 0.665 (103s)
+reference (no LLM): {'oracle': 736.8, 'history_only': 120.8, 'constant_prior': 28.0, 'pass': 0.0}
+
+=== LANES ===
+  BLIND (context slice only)   @100ms: surplus/1k     49.4 win 0.37 miss 0.00 | @3000ms: surplus/1k     49.4 miss 0.00 | bucket acc 0.16 logMAE 1.14 ECE 0.428 | median 18 ms p90 18 ms
+  TEXT (3 memos)               @100ms: surplus/1k      0.0 win 0.00 miss 1.00 | @3000ms: surplus/1k      8.3 miss 0.00 | bucket acc 0.43 logMAE 0.93 ECE 0.317 | median 1621 ms p90 1801 ms
+  LATENT (3 bridges -> merge)  @100ms: surplus/1k      0.0 win 0.00 miss 0.00 | @3000ms: surplus/1k      0.0 miss 0.00 | bucket acc 0.43 logMAE 1.08 ECE 0.065 | median 72 ms p90 74 ms
+  leave-one-branch-out (latent, no deadline):
+      drop user                @100ms: surplus/1k      0.0 win 0.00 miss 0.00 | @3000ms: surplus/1k      0.0 miss 0.00 | bucket acc 0.43 logMAE 1.08 ECE 0.065 | median 18 ms p90 19 ms
+      drop context             @100ms: surplus/1k      0.0 win 0.00 miss 0.00 | @3000ms: surplus/1k      0.0 miss 0.00 | bucket acc 0.43 logMAE 1.08 ECE 0.065 | median 18 ms p90 19 ms
+      drop history             @100ms: surplus/1k      0.0 win 0.00 miss 0.00 | @3000ms: surplus/1k      0.0 miss 0.00 | bucket acc 0.43 logMAE 1.15 ECE 0.088 | median 18 ms p90 18 ms
+  drop user    : d(surplus/1k)     +0.0   d(bucket acc) +0.000
+  drop context : d(surplus/1k)     +0.0   d(bucket acc) +0.000
+  drop history : d(surplus/1k)     +0.0   d(bucket acc) +0.000
+  ground truth informativeness: history > context > user
+saved out/auction_results.json
+
+####################################################################################################
+ SUMMARY
+####################################################################################################
+latentcheck (Qwen/Qwen2.5-0.5B-Instruct -> HuggingFaceTB/SmolLM2-1.7B-Instruct): verdict ATTENTION
+  fidelity 0.820 | decay hop8/hop1 0.992 | format_keep 0.00 (text 1.00) | cue innocent: True | fix: format 1.00 at -0.033 fidelity
+  latency: 17.1 ms/hop vs 1644 ms text -> 96x
+auction (reference surplus/1k: oracle 737, constant prior 28):
+  blind  @100ms miss 0.00 surplus 49.4 | @3000ms surplus 49.4 | median 18 ms
+  text   @100ms miss 1.00 surplus 0.0 | @3000ms surplus 8.3 | median 1621 ms
+  latent @100ms miss 0.00 surplus 0.0 | @3000ms surplus 0.0 | median 72 ms
+
+total 75.8 min. Files: out/report.html (scorecard), out/*.json. Label: one seed, synthetic tasks, frozen models.
